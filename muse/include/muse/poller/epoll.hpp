@@ -26,22 +26,24 @@ namespace muse {
         using Base = Poller;
         using Self = Epoll;
       public:
-        static auto create(std::unique_ptr<Self> *out) -> MuseStatus;
+        static auto create(EventLoop *event_loop, std::unique_ptr<Self> *out) -> MuseStatus;
 
-        auto poll(usize timeout_ms, ChannelList *active_channels) -> TimePoint override;
+        Epoll(EventLoop *event_loop, isize fd);
+        ~Epoll() override;
+
+        auto poll(usize timeout_ms, ActiveChannelList *active_channels) -> TimePoint override;
+        auto add_channel(Channel *channel) -> void override;
         auto update_channel(Channel *channel) -> void override;
         auto remove_channel(Channel *channel) -> void override;
         auto shutdown() -> void override;
       private:
-        auto get_active_channels(usize num_events, ChannelList *active_channels) -> void;
+        auto update_channel_internal(i32 op, Channel *channel) -> void;
+        auto get_active_channels(usize num_events, ActiveChannelList *active_channels) -> void;
 
         struct Event;
         using EventList = std::vector<Event>;
 
         constexpr static auto kNumInitEvents = 16;
-
-        Epoll(isize fd);
-        ~Epoll() override;
 
         isize epfd_;
         EventList events_;

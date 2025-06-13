@@ -12,56 +12,99 @@
 #define MUSE_EVENT_LOOP_HPP 1
 
 #include <muse/types.hpp>
+#include <muse/status.hpp>
 #include <muse/poller.hpp>
 #include <muse/channel.hpp>
+#include <muse/work-queue.hpp>
+#include <muse/timer-queue.hpp>
 
-#include <vector>
 #include <atomic>
 #include <thread>
 #include <memory>
-#include <functional>
+#include <semaphore>
 
-#include <lib/enumbits/enumbits.hpp>
+#include <enumbits/atomic.hpp>
 
 namespace muse {
     class EventLoop {
+        using Self = EventLoop;
       public:
-        using Task = std::function<auto () -> void>;
+        static auto current() -> Self * {
+            return per_thread_loop;
+        }
+
+        static auto create(EventLoop *out) -> MuseStatus;
+
+        EventLoop();
+        ~EventLoop();
 
         auto start() -> void;
 
-        auto run_in_loop(Task const &) -> void;
+        auto quit() -> void;
+
+        auto in_loop_thread() const -> bool {
+            return tid_ == std::this_thread::get_id();
+        }
+
+        auto add_channel(Channel *channel) -> void {
+            DEBUG_ASSERT(in_loop_thread());
+            poller_->add_channel(channel);
+        }
+
+        auto update_channel(Channel *channel) -> void {
+            DEBUG_ASSERT(in_loop_thread());
+            poller_->update_channel(channel);
+        }
+
+        auto remove_channel(Channel *channel) -> void {
+            DEBUG_ASSERT(in_loop_thread());
+            poller_->remove_channel(channel);
+        }
+
+        auto work_queue() -> WorkQueue & {
+            return workqueue_;
+        }
+
+        auto timer_queue() -> TimerQueue & {
+            return timerqueue_;
+        }
+
+        auto is_quited() const -> bool {
+            return flags_.fetch_test(Flags::Quited);
+        }
       private:
-        enum class Flags: u16 {
+        auto wakeup() -> void;
+
+        auto on_woken() -> void;
+
+        enum class Flags: u32 {
             Running = BIT(0),
             Waiting = BIT(1),
             Handling = BIT(2),
             HandlingPendingTasks = BIT(3),
+            Quited = BIT(4),
+            ShutDown = BIT(4),
         };
-        MUSE_ENABLE_INNER_ENUMBITS(Flags);
+        MUSE_ENABLE_ENUMBITS_INNER(Flags);
 
-        auto process_pending_tasks() -> void;
-
-        auto enqueue_task(Task const &task) -> void;
-
-        auto is_in_loop_thread() const -> bool {
-            return tid_ == std::this_thread::get_id();
-        }
+        // 10 seconds.
+        static usize constexpr kPollingTimeoutMs = 10000;
 
         // Do not modifies the following layout without a good enough reason.
+        enumbits::Atomic<Flags> flags_;
         u32 num_iterations_;
-        std::atomic_uint8_t shutdown_;
-        std::atomic_uint8_t padding_;
-        Flags flags_;
 
         std::thread::id tid_;
         std::unique_ptr<Poller> poller_;
 
-        std::mutex mutex_;
-        std::vector<Task> pending_tasks_;
+        WorkQueue workqueue_;
+        TimerQueue timerqueue_;
 
+        std::unique_ptr<Channel> wakeup_channel_;
         Channel *current_active_channel_;
-        ChannelList active_channels_;
+        ActiveChannelList active_channels_;
+
+        static inline thread_local Self *per_thread_loop;
     };
 
 } // namespace muse

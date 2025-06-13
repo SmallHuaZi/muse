@@ -21,6 +21,13 @@ namespace muse {
     using ErrorHandler = std::function<auto () -> void>;
     using CloseHandler = std::function<auto () -> void>;
 
+    class TcpConnection;
+    using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
+
+    using MessageHandler = std::function<auto (TcpConnectionPtr const &) -> void>;
+    using MessageHandler = std::function<auto (TcpConnectionPtr const &) -> void>;
+    using MessageHandler = std::function<auto (TcpConnectionPtr const &) -> void>;
+
 } // namespace muse
 
 #endif // #ifndef MUSE_EVENT_HANDLER_HPP

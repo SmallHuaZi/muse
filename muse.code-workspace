@@ -8,7 +8,36 @@
         "mesonbuild.configureEnvironment": {
             "CC": "clang-21",
             "CXX": "clang++-21"
-        }
+        },
+        "mesonbuild.buildFolder": "target",
+        "mesonbuild.muonPath": "",
+
+        "editor.rulers": [
+            130
+        ],
+        "editor.tokenColorCustomizations": {
+            "textMateRules": [
+                {
+                    "scope": "entity.name.function",
+                    "settings": {
+                        "fontStyle": "underline"
+                    },
+                },
+            ],
+        },
+        "editor.semanticTokenColorCustomizations": {
+            "rules": {
+                "macro": {
+                    "underline": false
+                },
+                "function": {
+                    "underline": true
+                }
+            }
+        },
+        "editor.fontFamily": "'Fira Code'",
+        "editor.codeLensFontFamily": "'Fira Code'",
+        "editor.fontLigatures": true,
     },
     "launch": {
         "version": "0.2.0",

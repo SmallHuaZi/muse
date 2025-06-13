@@ -1,51 +1,85 @@
 #include <muse/event_loop.hpp>
+#include <muse/log.hpp>
+
+#include <muse/platform/socket.hpp>
+
+#include <thread>
 
 namespace muse {
-    auto EventLoop::process_pending_tasks() -> void {
-        decltype(pending_tasks_) to_process;
-        {
-            std::lock_guard guard{mutex_};
-            // Guess this should be the optimal way
-            new (&to_process) decltype(to_process)(std::move(pending_tasks_));
+    EventLoop::EventLoop()
+        : flags_()
+        , tid_(std::this_thread::get_id())
+        , workqueue_(this)
+        , timerqueue_(this)
+        , wakeup_channel_()
+        , current_active_channel_(0)
+        , active_channels_() {
+        DEBUG_ASSERT(!per_thread_loop, "Exists multiple active instances in one thread");
+
+        if (per_thread_loop) {
+            log::error("There are simoutaneously two loops in one thread.");
+            return;
         }
 
-        for (auto &task : to_process) {
-            task();
+        wakeup_channel_->set_reading_handler(std::bind(&Self::on_woken, this));
+        wakeup_channel_->enable_reading();
+
+        per_thread_loop = this;
+    }
+
+    EventLoop::~EventLoop() {
+        if (this == per_thread_loop) {
+            per_thread_loop = 0;
         }
     }
 
     auto EventLoop::start() -> void {
-        while (!shutdown_.load()) {
-            auto const received_time = poller_->poll(0, &active_channels_);
+        DEBUG_ASSERT(per_thread_loop == this, "Duplicated calls");
+
+        while (!is_quited()) {
+            auto const received_time = poller_->poll(kPollingTimeoutMs, &active_channels_);
 
             num_iterations_ += 1;
             if (!active_channels_.empty()) {
-                flags_ |= Flags::Handling;
+                flags_.fetch_or(Flags::Handling);
+
                 for (auto &channel : active_channels_) {
                     current_active_channel_ = &channel;
                     channel.handle_event(received_time);
                 }
-                flags_ &= ~Flags::Handling;
-                current_active_channel_ = 0;
+
+                flags_.fetch_and(~Flags::Handling);
             }
+            current_active_channel_ = 0;
 
-            process_pending_tasks();
+            // Give pending tasks a chance to execute.
+            workqueue_.run_tasks();
         }
 
-        flags_ &= ~Flags::Running;
+        flags_.fetch_and(~Flags::Running);
+
+        // Waiting until EventLoop::quit() finished.
+        flags_.wait(Flags::ShutDown);
     }
 
-    auto EventLoop::run_in_loop(Task const &task) -> void {
-        if (is_in_loop_thread()) {
-            task();
-        } else {
-            enqueue_task(task);
+    auto EventLoop::quit() -> void {
+        // Before to quit, acquires the |shutdown_| to prevent accessing an invalid object
+        // in following wakeup() call.
+        flags_.fetch_or(Flags::Quited);
+
+        if (!in_loop_thread()) {
+            wakeup();
         }
+
+        flags_.fetch_or(Flags::ShutDown);
     }
 
-    auto EventLoop::enqueue_task(Task const &task) -> void {
-        std::lock_guard guard{mutex_};
-        pending_tasks_.push_back(task);
+    auto EventLoop::wakeup() -> void {
+        usize tag = 1;
+    }
+
+    auto EventLoop::on_woken() -> void {
+        usize tag = 1;
     }
 
 } // namespace muse

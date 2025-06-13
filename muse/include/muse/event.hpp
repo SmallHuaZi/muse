@@ -13,7 +13,7 @@
 
 #include <muse/types.hpp>
 
-#include <lib/enumbits/enumbits.hpp>
+#include <util/enumbits.hpp>
 
 namespace muse {
     enum class Events {

@@ -36,7 +36,11 @@ namespace muse {
     class EventLoop;
     class EventLoopThread;
 
-    using TimePoint = std::chrono::time_point<std::chrono::milliseconds>;
+    class Socket;
+    class TcpConnection;
+    class TcpServer;
+
+    using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
 
 } // namespace muse
 

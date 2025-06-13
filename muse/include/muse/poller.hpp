@@ -15,20 +15,37 @@
 #include <muse/event.hpp>
 #include <muse/channel.hpp>
 
-#include <lib/enumbits/enumbits.hpp>
+#include <util/enumbits.hpp>
 
 namespace muse {
     class Poller {
       public:
-        Poller() = default;
+        enum class Feature {
+            
+        };
+        MUSE_ENABLE_ENUMBITS_INNER(Feature);
+
+        Poller(EventLoop *loop) 
+            : loop_(loop), channels_()
+        {}
+
         virtual ~Poller() = default;
 
-        virtual auto poll(usize timeout_ms, ChannelList *channels) -> TimePoint = 0;
+        virtual auto poll(usize timeout_ms, ActiveChannelList *channels) -> TimePoint = 0;
+        virtual auto add_channel(Channel *channel) -> void = 0;
         virtual auto update_channel(Channel *channel) -> void = 0;
         virtual auto remove_channel(Channel *channel) -> void = 0;
         virtual auto shutdown() -> void = 0;
-      private:
-        ChannelSet channels_;
+
+        auto has_channel(Channel *channel) const -> bool {
+            assert_in_loop_thread();
+            return channels_.find(channel->native_handle()) != channels_.end();
+        }
+      protected:
+        auto assert_in_loop_thread() const -> void;
+        EventLoop *loop_;
+        Feature feature_;
+        ChannelList channels_;
     };
 
 } // namespace muse

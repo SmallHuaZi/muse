@@ -1,0 +1,4 @@
+# Enable Bzlmod for every Bazel command
+common --enable_bzlmod
+
+build --cxxopt=-std=c++20 --symlink_prefix=target/ --features=-use_system_include_for_lib

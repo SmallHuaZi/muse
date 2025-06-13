@@ -12,13 +12,30 @@
 #define MUSE_ACCEPTOR_HPP 1
 
 #include <muse/types.hpp>
+#include <muse/status.hpp>
+#include <muse/base/socket.hpp>
+
+#include <functional>
+
+#include <net/socket_addr.hpp>
 
 namespace muse {
     class Acceptor {
       public:
-        virtual auto listen() -> void = 0;
+        using NativeHandle = Socket::NativeHandle;
+        using NewConnectionHandler = std::function<auto (NativeHandle, net::SocketAddr const &) -> void>;
+
+        static auto create(EventLoop *, net::SocketAddr, Acceptor *) -> MuseStatus;
+
+        auto listen() -> void;
+
+        auto set_new_connection_handler(NewConnectionHandler) -> void;
       private:
+        Acceptor(EventLoop *event_loop);
+
+        Socket socket_;
         EventLoop *event_loop_;
+        NewConnectionHandler handler_;
     };
 
 } // namespace muse
