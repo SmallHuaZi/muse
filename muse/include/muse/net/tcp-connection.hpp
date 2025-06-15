@@ -61,24 +61,25 @@ namespace muse {
         }
 
         auto set_connection_handler(ConnectionHandler const &handler) noexcept -> void {
+            connection_handler_ = handler;    
         }
+
+        // Internal method, instead of Self::create().
+        TcpConnection(EventLoop *, std::string const &, Socket *, Channel *,
+                      net::SocketAddr, net::SocketAddr) noexcept;
+        
+        ~TcpConnection() = default;
       protected:
         enum class Status {
             Connecting,
             Connected,
             Disconnected,
         };
-        
-        // Prohibit users to construct a connection object on stack.
-        TcpConnection(EventLoop *, std::string const &, Socket *, Channel *,
-                      net::SocketAddr, net::SocketAddr) noexcept;
-        
-        ~TcpConnection() = default;
 
         EventLoop *ioloop_;
         std::string name_;
-        net::SocketAddr local_addr_;
-        net::SocketAddr peer_addr_;
+        SocketAddr local_addr_;
+        SocketAddr peer_addr_;
 
         std::unique_ptr<Socket> socket_;
         std::unique_ptr<Acceptor> acceptor_;

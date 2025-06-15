@@ -1,4 +1,7 @@
 /// Copyright(C) 2024 smallhuazi
+
+#ifndef MUSE_NET_TCP_SERVER_HPP
+#define MUSE_NET_TCP_SERVER_HPP
 ///
 /// This program is free software; you can redistribute it and/or modify
 /// it under the terms of the GNU General Public License as published
@@ -69,3 +72,6 @@ namespace muse {
 } // namespace muse
 
 #endif // #ifndef MUSE_TCP_SERVER_HPP
+
+
+#endif // MUSE_NET_TCP_SERVER_HPP

@@ -8,18 +8,15 @@
 /// For additional information, please refer to the following website:
 /// https://opensource.org/license/gpl-2-0
 ///
-#ifndef NET_IPADDR_HPP
-#define NET_IPADDR_HPP 1
+#ifndef MUSE_NET_IP_ADDR_HPP
+#define MUSE_NET_IP_ADDR_HPP 1
 
 #include <muse/types.hpp>
 
 #include <optional>
 #include <cstring>
 
-namespace net {
-    using muse::u8;
-    using muse::usize;
-
+namespace muse::net {
     template <typename IpAddr, char Delimiter>
     auto from_str(char const *str) -> std::optional<IpAddr>;
 
@@ -82,6 +79,6 @@ namespace net {
         IpV6Addr v6;
     };
 
-} // namespace net
+} // namespace muse::net
 
-#endif // #ifndef NET_IPADDR_HPP
+#endif // #ifndef MUSE_NET_IP_ADDR_HPP

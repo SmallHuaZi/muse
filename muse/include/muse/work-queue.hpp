@@ -71,9 +71,9 @@ namespace muse {
       public:
         WorkQueue(EventLoop *loop);
 
-        static auto commit_task(Task const &task) -> void;
+        auto commit_task(Task const &task) -> void;
 
-        static auto commit_task(Task::Handler const &handler, usize priority) -> void;
+        auto commit_task(Task::Handler const &handler, usize priority) -> void;
 
         auto run_tasks() -> usize;
 

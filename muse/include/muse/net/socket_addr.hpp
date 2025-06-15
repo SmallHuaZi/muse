@@ -8,14 +8,14 @@
 /// For additional information, please refer to the following website:
 /// https://opensource.org/license/gpl-2-0
 ///
-#ifndef NET_SOCKET_ADDR_HPP
-#define NET_SOCKET_ADDR_HPP 1
+#ifndef MUSE_NET_SOCKET_ADDR_HPP
+#define MUSE_NET_SOCKET_ADDR_HPP 1
 
-#include <net/ip_addr.hpp>
+#include <muse/net/ip_addr.hpp>
 
 #include <string>
 
-namespace net {
+namespace muse::net {
     class SocketAddr {
       public:
         SocketAddr(IpAddr ip, usize port)
@@ -31,6 +31,6 @@ namespace net {
         usize port_;
     };
 
-} // namespace net
+} // namespace muse::net
 
-#endif // #ifndef NET_SOCKET_ADDR_HPP
+#endif // #ifndef MUSE_NET_SOCKET_ADDR_HPP

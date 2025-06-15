@@ -21,18 +21,18 @@ namespace enumbits {
     class Atomic {
         static_assert(std::is_enum_v<T>, "Template parameter 'T' is not an enum type");
         static_assert(MuseEnumBitsEnabledV<T>, "Template parameter 'T' is not enabled MuseEnumBits");
+
+        typedef Atomic  Self;
       public:
         typedef T   EnumType;
         typedef std::underlying_type_t<EnumType>   UnderlyingType;
       
         auto fetch_and(EnumType flags, std::memory_order mo = std::memory_order::seq_cst) -> EnumType {
-            inner_.fetch_and(static_cast<UnderlyingType>(flags), mo);
-            return *this;
+            return static_cast<EnumType>(inner_.fetch_and(static_cast<UnderlyingType>(flags), mo));
         }
 
         auto fetch_or(EnumType flags, std::memory_order mo = std::memory_order::seq_cst) -> EnumType {
-            inner_.fetch_or(static_cast<UnderlyingType>(flags), mo);
-            return *this;
+            return static_cast<EnumType>(inner_.fetch_or(static_cast<UnderlyingType>(flags), mo));
         }
 
         auto fetch_test(EnumType flags, std::memory_order mo = std::memory_order::seq_cst) const -> bool {

@@ -30,7 +30,6 @@ namespace muse {
     using usize = std::size_t;
     using isize = std::ptrdiff_t;
 
-    class Poller;
     class Channel;
     class Acceptor;
     class EventLoop;

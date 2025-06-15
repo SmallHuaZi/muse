@@ -1,6 +1,7 @@
 #include <muse/tcp-server.hpp>
 
 #include <muse/event_loop_thread_pool.hpp>
+#include <muse/event_loop.hpp>
 #include <muse/tcp-connection.hpp>
 #include <muse/work-queue.hpp>
 #include <muse/acceptor.hpp>
@@ -22,7 +23,7 @@ namespace muse {
         , acceptor_(acceptor)
         , thread_pool_(tpool)
     {
-        // std::bind_front at least requires C++20
+        // std::bind_front requires at least C++20
         acceptor_->set_new_connection_handler(std::bind_front(&Self::new_connection, this));
     }
 
@@ -78,8 +79,7 @@ namespace muse {
         connection->set_connection_handler(on_connection_established_or_destroied_);
         connection->set_close_handler(std::bind(&TcpConnection::on_disconnected, connection));
 
-        WorkQueue::commit_task(std::bind(&TcpConnection::on_connected, connection), 0);
-
+        loop_->work_queue().commit_task(std::bind(&TcpConnection::on_connected, connection), 0);
         connections_[name] = connection;
     }
 
